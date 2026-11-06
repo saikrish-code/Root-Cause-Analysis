@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.routers import health
 from app.routers import deviations, evidence_items, rca_investigations, capa_actions
+from app.routers.ai import router as ai_router
 
 app = FastAPI(title="Quality RCA API", version="1.0.0")
 
@@ -19,6 +20,7 @@ app.include_router(deviations.router)
 app.include_router(evidence_items.router)
 app.include_router(rca_investigations.router)
 app.include_router(capa_actions.router)
+app.include_router(ai_router)
 
 @app.get("/")
 def root():

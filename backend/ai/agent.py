@@ -1,18 +1,15 @@
-from langchain_groq import ChatGroq
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, List
+"""
+ai.agent — kept for backward compatibility.
 
-class AgentState(TypedDict):
-    messages: List[str]
+The actual pipeline logic lives in:
+  - ai.groq_client   (Groq SDK wrapper)
+  - ai.schemas        (Pydantic schemas)
+  - ai.prompts        (system/user prompts)
+  - ai.nodes          (pipeline node functions)
+  - ai.graph          (LangGraph graph builders)
+  - ai.router         (FastAPI endpoints)
+"""
 
-def create_rca_graph(api_key: str):
-    workflow = StateGraph(AgentState)
-    
-    def dummy_node(state: AgentState):
-        return {"messages": state["messages"] + ["RCA Agent Initialized"]}
-    
-    workflow.add_node("rca_node", dummy_node)
-    workflow.set_entry_point("rca_node")
-    workflow.add_edge("rca_node", END)
-    
-    return workflow.compile()
+from ai.graph import build_full_graph, build_rca_only_graph, build_capa_only_graph  # noqa: F401
+
+__all__ = ["build_full_graph", "build_rca_only_graph", "build_capa_only_graph"]
