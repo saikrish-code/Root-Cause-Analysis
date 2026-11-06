@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from datetime import date
 from app.ai.schemas import (
-    IntakeResult, ExtractedDeviation, EvidenceGap, RCAResult, CAPAResult, ProposedCAPA
+    IntakeResult, ExtractedDeviation, EvidenceGap, RCAResult, CAPAResult, ProposedCAPA, RootCauseProposal
 )
 
 
@@ -37,7 +37,7 @@ class TestIntakeNode:
 
 
 class TestExtractionNode:
-    @patch('app.ai.nodes.groq_client')
+    @patch('app.ai.groq_client.groq_client')
     def test_extraction_returns_structured_data(self, mock_client):
         from app.ai.nodes import extraction_node, PipelineState
 
@@ -62,7 +62,7 @@ class TestExtractionNode:
         assert result["extraction"].product_name == "Aspirin 81mg"
         assert result["extraction"].batch_lot_number == "B12345"
 
-    @patch('app.ai.nodes.groq_client')
+    @patch('app.ai.groq_client.groq_client')
     def test_extraction_handles_missing_fields(self, mock_client):
         from app.ai.nodes import extraction_node, PipelineState
 
@@ -89,7 +89,7 @@ class TestExtractionNode:
 
 
 class TestEvidenceGapNode:
-    @patch('app.ai.nodes.groq_client')
+    @patch('app.ai.groq_client.groq_client')
     def test_evidence_gap_identifies_missing_info(self, mock_client):
         from app.ai.nodes import evidence_gap_node, PipelineState
         from app.ai.schemas import ExtractedDeviation
@@ -128,16 +128,24 @@ class TestEvidenceGapNode:
 
 
 class TestRCANode:
-    @patch('app.ai.nodes.groq_client')
+    @patch('app.ai.groq_client.groq_client')
     def test_rca_with_five_whys_method(self, mock_client):
         from app.ai.nodes import rca_node, PipelineState
         from app.ai.schemas import ExtractedDeviation
 
         mock_client.rca_analysis.return_value = RCAResult(
             method_used="five_whys",
-            root_cause="Faulty temperature sensor",
-            contributing_factors=["Sensor calibration drift", "Monitoring system delay"],
-            confidence_score=0.85,
+            root_cause_proposals=[
+                RootCauseProposal(
+                    cause_type="Faulty temperature sensor",
+                    is_primary=True,
+                    ai_rationale="Sensor drifted over time",
+                    supporting_evidence_ids=[1],
+                    confidence_score=0.85,
+                    confidence_label="High"
+                )
+            ],
+            confidence_summary="High confidence based on temperature logs",
             evidence_support_notes="Temperature logs show 5 degree variance",
             limitations="Analysis based on limited data from single batch"
         )
@@ -165,19 +173,26 @@ class TestRCANode:
 
         assert result["rca"] is not None
         assert result["rca"].method_used == "five_whys"
-        assert result["rca"].root_cause == "Faulty temperature sensor"
-        assert result["rca"].confidence_score == 0.85
+        assert result["rca"].root_cause_proposals[0].cause_type == "Faulty temperature sensor"
 
-    @patch('app.ai.nodes.groq_client')
+    @patch('app.ai.groq_client.groq_client')
     def test_rca_uses_fishbone_for_critical(self, mock_client):
         from app.ai.nodes import rca_node, PipelineState
-        from app.ai.schemas import ExtractedDeviation
+        from app.ai.schemas import ExtractedDeviation, RootCauseProposal
 
         mock_client.rca_analysis.return_value = RCAResult(
             method_used="fishbone",
-            root_cause="Calibration procedure not followed",
-            contributing_factors=["Training gap", "SOP ambiguity"],
-            confidence_score=0.75,
+            root_cause_proposals=[
+                RootCauseProposal(
+                    cause_type="Calibration procedure not followed",
+                    is_primary=True,
+                    ai_rationale="Procedure skipped during shift change",
+                    supporting_evidence_ids=[],
+                    confidence_score=0.75,
+                    confidence_label="Medium"
+                )
+            ],
+            confidence_summary="Medium confidence based on interviews",
             evidence_support_notes="Interview notes indicate calibration skipped",
             limitations="Limited equipment data available"
         )
@@ -208,7 +223,7 @@ class TestRCANode:
 
 
 class TestCAPANode:
-    @patch('app.ai.nodes.groq_client')
+    @patch('app.ai.groq_client.groq_client')
     def test_capa_proposes_corrective_and_preventive(self, mock_client):
         from app.ai.nodes import capa_node, PipelineState
         from app.ai.schemas import ExtractedDeviation, RCAResult
@@ -252,9 +267,17 @@ class TestCAPANode:
 
         rca = RCAResult(
             method_used="five_whys",
-            root_cause="Faulty sensor",
-            contributing_factors=[],
-            confidence_score=0.85,
+            root_cause_proposals=[
+                RootCauseProposal(
+                    cause_type="Faulty sensor",
+                    is_primary=True,
+                    ai_rationale="Sensor drift",
+                    supporting_evidence_ids=[1],
+                    confidence_score=0.85,
+                    confidence_label="High"
+                )
+            ],
+            confidence_summary="High confidence",
             evidence_support_notes="Logs show sensor drift",
             limitations=""
         )
@@ -274,7 +297,7 @@ class TestCAPANode:
 
 
 class TestPipelineIntegration:
-    @patch('app.ai.nodes.groq_client')
+    @patch('app.ai.groq_client.groq_client')
     def test_full_pipeline_runs_all_nodes(self, mock_client):
         from app.ai.graph import run_full_pipeline
 
@@ -301,9 +324,17 @@ class TestPipelineIntegration:
 
         mock_client.rca_analysis.return_value = RCAResult(
             method_used="five_whys",
-            root_cause="Seal temperature too low",
-            contributing_factors=["Temperature controller drift"],
-            confidence_score=0.88,
+            root_cause_proposals=[
+                RootCauseProposal(
+                    cause_type="Seal temperature too low",
+                    is_primary=True,
+                    ai_rationale="Temperature controller drift",
+                    supporting_evidence_ids=[1],
+                    confidence_score=0.88,
+                    confidence_label="High"
+                )
+            ],
+            confidence_summary="High confidence",
             evidence_support_notes="Temperature log confirms 5C below setpoint",
             limitations="No visual inspection records"
         )
@@ -333,7 +364,7 @@ class TestPipelineIntegration:
         assert result["extraction"] is not None
         assert result["extraction"].product_name == "Product X"
         assert result["rca"] is not None
-        assert result["rca"].root_cause == "Seal temperature too low"
+        assert result["rca"].root_cause_proposals[0].cause_type == "Seal temperature too low"
         assert result["capa"] is not None
         assert len(result["capa"].proposed_capas) > 0
 

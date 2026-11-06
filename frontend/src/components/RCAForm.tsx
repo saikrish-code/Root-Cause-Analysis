@@ -7,6 +7,7 @@ import { selectRCA } from '../store/rcaSlice'
 import { selectCAPA } from '../store/capaSlice'
 import { InvestigationSection } from './InvestigationSection'
 import { RootCauseSection } from './RootCauseSection'
+import { EvidenceChecklistSection } from './EvidenceChecklistSection'
 
 interface CollapsibleSectionProps {
   title: string
@@ -242,50 +243,7 @@ export const RCAForm: React.FC = () => {
       </CollapsibleSection>
 
       <CollapsibleSection title="3. Evidence Checklist">
-        {evidence.items.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
-            Evidence items will appear here after AI processing or manual entry
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {evidence.items.map((item) => (
-              <div
-                key={item.id}
-                className={`flex items-center p-3 rounded-lg border ${
-                  item.is_ai_flagged_missing
-                    ? 'bg-yellow-50 border-yellow-200'
-                    : item.collected
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-white border-gray-200'
-                } ${item.isAIFilled ? 'ring-2 ring-green-200' : ''}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={item.collected}
-                  onChange={() => {}}
-                  className="h-4 w-4 text-green-600 rounded border-gray-300"
-                />
-                <div className="ml-3 flex-1">
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-800">{item.evidence_type}</span>
-                    {item.is_ai_flagged_missing && (
-                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                        AI flagged as missing
-                      </span>
-                    )}
-                    {item.isAIFilled && <AIFilledBadge />}
-                  </div>
-                  {item.description && (
-                    <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                  )}
-                  {item.source && (
-                    <p className="text-xs text-gray-500 mt-1">Source: {item.source}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <EvidenceChecklistSection />
       </CollapsibleSection>
 
       <CollapsibleSection title="4. Investigation (5 Whys / Fishbone)">
