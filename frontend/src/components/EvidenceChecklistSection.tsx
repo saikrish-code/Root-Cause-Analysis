@@ -4,7 +4,6 @@ import { RootState, AppDispatch } from '../store/store'
 import {
   createEvidenceItem,
   updateEvidenceItem,
-  markAsCollected,
   EvidenceItem,
 } from '../store/evidenceSlice'
 import { populateFromAI as populateRCAFromAI } from '../store/rcaSlice'
@@ -50,7 +49,7 @@ export const EvidenceChecklistSection: React.FC = () => {
   const handleRerunRCA = async () => {
     setIsRcaRunning(true)
     try {
-      const deviationId = 1 // default or from route
+      const deviationId = 1
       const response = await fetch(`/api/ai/${deviationId}/rca`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,7 +79,7 @@ export const EvidenceChecklistSection: React.FC = () => {
             status: 'In Progress' as const,
             ai_generated: true,
             reviewed_by_user: false,
-            confirmed_root_cause: data.rca.root_cause,
+            confirmed_root_cause: rca.investigation?.confirmed_root_cause || null,
             confidence_notes: `Re-evaluated with updated evidence. Confidence: ${Math.round(data.rca.confidence_score * 100)}%. ${data.rca.evidence_support_notes}`,
             five_whys_steps: rca.investigation?.five_whys_steps || [],
             fishbone_causes: rca.investigation?.fishbone_causes || [],
@@ -100,12 +99,12 @@ export const EvidenceChecklistSection: React.FC = () => {
     <div className="space-y-6">
       {/* Evidence Gaps Callout Banner */}
       {evidenceGaps.length > 0 && (
-        <div className="p-4 bg-amber-50 rounded-xl border border-amber-300 shadow-sm">
-          <div className="flex items-center space-x-2 mb-3">
+        <div className="p-5 bg-amber-500/10 rounded-2xl border border-amber-500/30 shadow-sm">
+          <div className="flex items-center space-x-2.5 mb-2.5">
             <span className="text-xl">⚠️</span>
-            <h4 className="font-bold text-amber-900 text-base">Evidence Gaps Identified by AI</h4>
+            <h4 className="font-bold text-amber-400 text-sm tracking-wide">Evidence Gaps Identified by AI</h4>
           </div>
-          <p className="text-xs text-amber-800 mb-3">
+          <p className="text-xs text-amber-300/80 mb-4 leading-relaxed">
             The AI Copilot has flagged missing information or documents needed to validate this investigation.
           </p>
 
@@ -115,11 +114,11 @@ export const EvidenceChecklistSection: React.FC = () => {
               const isAdding = activeGapIndex === index
 
               return (
-                <div key={index} className="p-3 bg-white rounded-lg border border-amber-200">
+                <div key={index} className="p-3.5 bg-[#0D0D0D] rounded-xl border border-white/10">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{gap}</p>
-                      <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-mono">
+                      <p className="text-xs font-semibold text-gray-200">{gap}</p>
+                      <span className="inline-block mt-1.5 text-[10px] bg-[#D5FF40]/10 text-[#D5FF40] border border-[#D5FF40]/30 px-2.5 py-0.5 rounded-full font-mono">
                         Suggested type: {suggestedType}
                       </span>
                     </div>
@@ -129,14 +128,14 @@ export const EvidenceChecklistSection: React.FC = () => {
                           setActiveGapIndex(index)
                           setEvidenceTypeInput(suggestedType)
                         }}
-                        className="px-3 py-1 bg-amber-600 text-white rounded-lg text-xs font-medium hover:bg-amber-700 flex-shrink-0 ml-2"
+                        className="px-3 py-1.5 bg-[#D5FF40] text-gray-900 rounded-full text-xs font-semibold hover:bg-[#c2eb35] flex-shrink-0 ml-3 transition-all"
                       >
                         + Add Evidence
                       </button>
                     ) : (
                       <button
                         onClick={() => setActiveGapIndex(null)}
-                        className="text-gray-400 hover:text-gray-600 text-sm"
+                        className="text-gray-400 hover:text-white text-xs"
                       >
                         ✕
                       </button>
@@ -144,36 +143,36 @@ export const EvidenceChecklistSection: React.FC = () => {
                   </div>
 
                   {isAdding && (
-                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                    <div className="mt-3 pt-3 border-t border-white/10 space-y-2.5">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Evidence Type</label>
+                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Evidence Type</label>
                         <input
                           type="text"
                           value={evidenceTypeInput}
                           onChange={(e) => setEvidenceTypeInput(e.target.value)}
-                          className="w-full p-2 text-xs border border-gray-300 rounded-lg"
+                          className="w-full p-2.5 text-xs bg-[#1A1A1A] border border-white/10 text-gray-200 rounded-xl"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Notes / File Reference</label>
+                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Notes / File Reference</label>
                         <input
                           type="text"
                           value={notesInput}
                           onChange={(e) => setNotesInput(e.target.value)}
                           placeholder="e.g. Attached file or document reference number"
-                          className="w-full p-2 text-xs border border-gray-300 rounded-lg"
+                          className="w-full p-2.5 text-xs bg-[#1A1A1A] border border-white/10 text-gray-200 rounded-xl"
                         />
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 pt-1">
                         <button
                           onClick={() => handleQuickAdd(gap, evidenceTypeInput)}
-                          className="px-3 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700"
+                          className="px-4 py-1.5 bg-[#D5FF40] text-gray-900 rounded-full text-xs font-semibold hover:bg-[#c2eb35]"
                         >
                           Save & Mark Collected
                         </button>
                         <button
                           onClick={() => setActiveGapIndex(null)}
-                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs font-medium"
+                          className="px-4 py-1.5 bg-[#1A1A1A] text-gray-300 border border-white/10 rounded-full text-xs font-medium"
                         >
                           Cancel
                         </button>
@@ -186,9 +185,9 @@ export const EvidenceChecklistSection: React.FC = () => {
           </div>
 
           {riskFlags.length > 0 && (
-            <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
-              <span className="text-xs font-bold text-red-900 block mb-1">Compliance & Quality Risk Flags:</span>
-              <ul className="list-disc list-inside text-xs text-red-800 space-y-1">
+            <div className="mt-4 p-3.5 bg-red-950/40 rounded-xl border border-red-500/30">
+              <span className="text-xs font-bold text-red-400 block mb-1">Compliance & Quality Risk Flags:</span>
+              <ul className="list-disc list-inside text-xs text-red-300 space-y-1">
                 {riskFlags.map((risk, i) => (
                   <li key={i}>{risk}</li>
                 ))}
@@ -200,19 +199,19 @@ export const EvidenceChecklistSection: React.FC = () => {
 
       {/* Re-run RCA Button */}
       {evidence.items.some(item => item.collected) && (
-        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+        <div className="flex items-center justify-between p-4 bg-[#2A2A2A] rounded-2xl border border-white/10">
           <div>
-            <h5 className="font-medium text-blue-900 text-sm">New Evidence Collected</h5>
-            <p className="text-xs text-blue-700">Re-evaluate investigation confidence and root cause support based on newly attached evidence.</p>
+            <h5 className="font-semibold text-white text-sm">New Evidence Collected</h5>
+            <p className="text-xs text-gray-400 mt-0.5">Re-evaluate investigation confidence and root cause support based on newly attached evidence.</p>
           </div>
           <button
             onClick={handleRerunRCA}
             disabled={isRcaRunning}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2 flex-shrink-0 ml-4"
+            className="px-5 py-2.5 bg-[#D5FF40] text-gray-900 rounded-full text-xs font-semibold hover:bg-[#c2eb35] disabled:opacity-50 flex items-center space-x-2 flex-shrink-0 ml-4 transition-all shadow-md shadow-[#D5FF40]/10"
           >
             {isRcaRunning ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-900 border-t-transparent"></div>
                 <span>Re-running RCA...</span>
               </>
             ) : (
@@ -223,10 +222,10 @@ export const EvidenceChecklistSection: React.FC = () => {
       )}
 
       {/* Evidence Checklist Items */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h4 className="font-semibold text-gray-800 mb-4">Evidence Checklist Items</h4>
+      <div className="bg-[#2A2A2A] rounded-2xl border border-white/10 p-5 shadow-lg">
+        <h4 className="font-bold text-white mb-4 text-sm tracking-wide">Evidence Checklist Items</h4>
         {evidence.items.length === 0 ? (
-          <p className="text-gray-500 text-center py-8 text-sm">
+          <p className="text-gray-400 text-center py-8 text-xs">
             Evidence items will appear here after AI processing or manual entry
           </p>
         ) : (
@@ -234,37 +233,37 @@ export const EvidenceChecklistSection: React.FC = () => {
             {evidence.items.map((item) => (
               <div
                 key={item.id}
-                className={`flex items-start p-3 rounded-lg border transition-colors ${
+                className={`flex items-start p-3.5 rounded-xl border transition-colors bg-[#0D0D0D] ${
                   item.is_ai_flagged_missing
-                    ? 'bg-amber-50 border-amber-200'
+                    ? 'border-amber-500/30'
                     : item.collected
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-white border-gray-200'
+                    ? 'border-emerald-500/30'
+                    : 'border-white/10'
                 }`}
               >
                 <input
                   type="checkbox"
                   checked={item.collected}
                   onChange={() => handleToggleCollected(item)}
-                  className="h-4 w-4 text-green-600 rounded border-gray-300 mt-1 cursor-pointer"
+                  className="h-4 w-4 text-[#D5FF40] rounded border-white/20 bg-[#1A1A1A] mt-1 cursor-pointer accent-[#D5FF40]"
                 />
-                <div className="ml-3 flex-1">
+                <div className="ml-3.5 flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-800 text-sm">{item.evidence_type}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                      item.collected ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    <span className="font-semibold text-white text-xs">{item.evidence_type}</span>
+                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${
+                      item.collected ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-[#1A1A1A] text-gray-400 border border-white/10'
                     }`}>
                       {item.collected ? 'Collected' : 'Pending'}
                     </span>
                   </div>
                   {item.description && (
-                    <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                    <p className="text-xs text-gray-300 mt-1 leading-relaxed">{item.description}</p>
                   )}
                   {item.notes && (
-                    <p className="text-xs text-blue-700 mt-1 italic">Note: {item.notes}</p>
+                    <p className="text-[11px] text-[#D5FF40] mt-1.5 italic">Note: {item.notes}</p>
                   )}
                   {item.source && (
-                    <p className="text-xs text-gray-500 mt-1">Source: {item.source}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">Source: {item.source}</p>
                   )}
                 </div>
               </div>

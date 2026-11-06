@@ -46,16 +46,16 @@ export const InvestigationHistoryPanel: React.FC<{ deviationId: number }> = ({ d
   }
 
   return (
-    <div className="h-full flex flex-col bg-white p-6 overflow-auto">
-      <div className="mb-6 pb-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800">Investigation History & Audit Trail</h2>
-        <p className="text-sm text-gray-500">Chronological timeline of all AI suggestions, human edits, and confirmations.</p>
+    <div className="h-full flex flex-col bg-[#0D0D0D] p-8 overflow-auto">
+      <div className="mb-6 pb-4 border-b border-white/10">
+        <h2 className="text-xl font-bold text-white tracking-wide">Investigation History & Audit Trail</h2>
+        <p className="text-sm text-gray-400 mt-1">Chronological timeline of all AI suggestions, human edits, and confirmations.</p>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading audit history...</div>
+        <div className="text-center py-12 text-gray-400">Loading audit history...</div>
       ) : logs.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="text-center py-12 text-gray-400 bg-[#1A1A1A] rounded-2xl border border-white/10">
           <p>No audit events recorded yet.</p>
         </div>
       ) : (
@@ -63,13 +63,13 @@ export const InvestigationHistoryPanel: React.FC<{ deviationId: number }> = ({ d
           {logs.map((log) => (
             <div
               key={log.id}
-              className={`p-4 rounded-xl border-l-4 shadow-sm bg-white border border-gray-200 ${
-                log.source === 'ai' ? 'border-l-blue-500' : 'border-l-green-500'
+              className={`p-5 rounded-2xl border-l-4 shadow-md bg-[#1A1A1A] border border-white/10 ${
+                log.source === 'ai' ? 'border-l-[#D5FF40]' : 'border-l-emerald-400'
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                  log.source === 'ai' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+              <div className="flex items-center justify-between mb-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  log.source === 'ai' ? 'bg-[#D5FF40]/10 text-[#D5FF40] border border-[#D5FF40]/30' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                 }`}>
                   {log.source === 'ai' ? 'AI Suggestion' : 'Human Action'}
                 </span>
@@ -77,12 +77,12 @@ export const InvestigationHistoryPanel: React.FC<{ deviationId: number }> = ({ d
                   {new Date(log.changed_at).toLocaleString()}
                 </span>
               </div>
-              <p className="text-sm text-gray-800 font-medium mt-2">
+              <p className="text-sm text-gray-200 font-medium mt-2">
                 {formatPlainLanguage(log)}
               </p>
-              <div className="mt-2 text-xs text-gray-500 flex items-center space-x-4">
-                <span>Entity: {log.entity_type} (ID: {log.entity_id})</span>
-                <span>Field: {log.field_changed}</span>
+              <div className="mt-3 text-xs text-gray-400 flex items-center space-x-6">
+                <span>Entity: <strong className="text-gray-300">{log.entity_type}</strong> (ID: {log.entity_id})</span>
+                <span>Field: <strong className="text-gray-300">{log.field_changed}</strong></span>
               </div>
             </div>
           ))}

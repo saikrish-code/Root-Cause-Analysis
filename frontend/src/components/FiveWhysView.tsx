@@ -22,11 +22,11 @@ export const FiveWhysView: React.FC<FiveWhysViewProps> = ({
 
   if (steps.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <p className="mb-4">No 5 Whys steps yet. Add one to start.</p>
+      <div className="text-center py-8 text-gray-400">
+        <p className="mb-4 text-sm">No 5 Whys steps yet. Add one to start.</p>
         <button
           onClick={onAddStep}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-5 py-2.5 bg-[#D5FF40] text-gray-900 rounded-full hover:bg-[#c2eb35] font-semibold text-sm transition-all shadow-md shadow-[#D5FF40]/10"
         >
           Add First Step
         </button>
@@ -52,7 +52,7 @@ export const FiveWhysView: React.FC<FiveWhysViewProps> = ({
 
       <button
         onClick={onAddStep}
-        className="w-full px-4 py-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 font-medium"
+        className="w-full px-4 py-3 border border-dashed border-[#D5FF40]/40 text-[#D5FF40] rounded-2xl hover:bg-[#D5FF40]/5 font-semibold text-sm transition-all"
       >
         + Add Another Step
       </button>
@@ -95,30 +95,30 @@ const FiveWhysStepCard: React.FC<FiveWhysStepCardProps> = ({
 
   return (
     <div
-      className={`p-4 rounded-lg border-2 ${
-        step.isAIFilled ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-white'
+      className={`p-5 rounded-2xl border transition-all bg-[#2A2A2A] ${
+        step.isAIFilled ? 'border-[#D5FF40]/50 ring-1 ring-[#D5FF40]/20' : 'border-white/10'
       }`}
     >
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+        <div className="flex items-center space-x-3">
+          <div className="w-7 h-7 rounded-full bg-[#D5FF40] text-gray-900 flex items-center justify-center text-xs font-bold">
             {stepNumber}
           </div>
-          <h5 className="font-medium text-gray-800">Why Step {stepNumber}</h5>
+          <h5 className="font-semibold text-white text-sm">Why Step {stepNumber}</h5>
         </div>
         <div className="flex items-center space-x-2">
           {isAISuggested && !isConfirmed && (
-            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
+            <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-semibold">
               Unconfirmed
             </span>
           )}
           {isConfirmed && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+            <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-semibold">
               ✓ Confirmed
             </span>
           )}
           {step.isAIFilled && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+            <span className="px-2.5 py-0.5 bg-[#D5FF40]/10 text-[#D5FF40] border border-[#D5FF40]/30 rounded-full text-xs font-semibold">
               AI Suggested
             </span>
           )}
@@ -128,29 +128,29 @@ const FiveWhysStepCard: React.FC<FiveWhysStepCardProps> = ({
       {!isEditing ? (
         <div>
           {step.why_question && (
-            <div className="mb-3 p-2 bg-blue-50 rounded">
-              <p className="text-sm text-blue-900">
-                <span className="font-medium">Why?</span> {step.why_question}
+            <div className="mb-3 p-3 bg-[#0D0D0D] rounded-xl border border-white/10">
+              <p className="text-xs text-gray-300">
+                <span className="font-semibold text-gray-400">Why?</span> {step.why_question}
               </p>
             </div>
           )}
-          <div className="mb-4 p-3 bg-white border border-gray-200 rounded">
-            <p className="text-gray-800">
-              <span className="font-medium">→</span> {step.answer}
+          <div className="mb-4 p-3.5 bg-[#0D0D0D] border border-white/10 rounded-xl">
+            <p className="text-gray-200 text-sm">
+              <span className="font-semibold text-[#D5FF40] mr-2">→</span> {step.answer}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setIsEditing(true)}
-              className="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              className="px-4 py-1.5 text-xs bg-[#1A1A1A] text-gray-300 border border-white/10 rounded-full hover:bg-[#333333] font-medium"
             >
               Edit
             </button>
             {isAISuggested && !isConfirmed && (
               <button
                 onClick={onConfirm}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+                className="px-4 py-1.5 text-xs bg-[#D5FF40] text-gray-900 rounded-full hover:bg-[#c2eb35] font-semibold"
               >
                 ✓ Confirm
               </button>
@@ -158,7 +158,7 @@ const FiveWhysStepCard: React.FC<FiveWhysStepCardProps> = ({
             <button
               onClick={onAskDeeper}
               disabled={isLoading}
-              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              className="px-4 py-1.5 text-xs bg-[#1A1A1A] border border-[#D5FF40] text-[#D5FF40] rounded-full hover:bg-[#D5FF40] hover:text-gray-900 disabled:opacity-50 font-semibold transition-all"
             >
               {isLoading ? 'Asking AI...' : '🔍 Ask AI to go deeper'}
             </button>
@@ -167,38 +167,38 @@ const FiveWhysStepCard: React.FC<FiveWhysStepCardProps> = ({
       ) : (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-semibold text-gray-400 mb-1">
               Why Question (optional)
             </label>
             <input
               type="text"
               value={editedQuestion}
               onChange={(e) => setEditedQuestion(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2 bg-[#0D0D0D] border border-white/10 text-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#D5FF40]"
               placeholder="Why did this happen?"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-semibold text-gray-400 mb-1">
               Answer
             </label>
             <textarea
               value={editedAnswer}
               onChange={(e) => setEditedAnswer(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2 bg-[#0D0D0D] border border-white/10 text-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#D5FF40]"
               rows={3}
             />
           </div>
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
-              className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-4 py-1.5 text-xs bg-[#D5FF40] text-gray-900 rounded-full font-semibold hover:bg-[#c2eb35]"
             >
               Save
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="px-3 py-1 text-sm bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              className="px-4 py-1.5 text-xs bg-[#1A1A1A] text-gray-300 border border-white/10 rounded-full hover:bg-[#333333]"
             >
               Cancel
             </button>

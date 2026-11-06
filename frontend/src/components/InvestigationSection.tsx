@@ -1,19 +1,18 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '../store/store'
-import { setSelectedMethod, confirmFiveWhysStep, updateFiveWhysStep, addFiveWhysStep, removeFishboneCause, confirmFishboneCause, updateFishboneCause, addFishboneCause, askAIDeeper } from '../store/rcaSlice'
+import { setSelectedMethod, confirmFiveWhysStep, updateFiveWhysStep, addFiveWhysStep, removeFishboneCause, confirmFishboneCause, updateFishboneCause, addFishboneCause, askAIDeeper, setConfirmedRootCause } from '../store/rcaSlice'
 import { FiveWhysView } from './FiveWhysView'
 import { FishboneView } from './FishboneView'
 
 export const InvestigationSection: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const rca = useSelector((state: RootState) => state.rca)
-  const [showRootCauseEditor, setShowRootCauseEditor] = useState(false)
   const [rootCauseText, setRootCauseText] = useState('')
 
   if (!rca.investigation) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-400">
         Investigation will be generated after AI processing
       </div>
     )
@@ -58,7 +57,7 @@ export const InvestigationSection: React.FC = () => {
     dispatch(addFishboneCause(newCause))
   }
 
-  const handleAskAIDeeper = async (stepId: number, stepAnswer: string) => {
+  const handleAskAIDeeper = async (_stepId: number, stepAnswer: string) => {
     dispatch(askAIDeeper({
       deviationId: investigation.deviation_id,
       stepAnswer,
@@ -71,38 +70,33 @@ export const InvestigationSection: React.FC = () => {
     ...investigation.fishbone_causes.filter(c => c.confirmedByUser),
   ]
 
-  const allAISuggestedConfirmed = [
-    ...investigation.five_whys_steps.filter(s => s.is_ai_suggested && !s.confirmedByUser),
-    ...investigation.fishbone_causes.filter(c => c.is_ai_suggested && !c.confirmedByUser),
-  ].length === 0
-
   return (
     <div>
-      <div className="mb-6 pb-4 border-b border-gray-200">
-        <h4 className="font-medium text-gray-700 mb-3">Investigation Method</h4>
-        <div className="flex space-x-2">
+      <div className="mb-6 pb-4 border-b border-white/10">
+        <h4 className="font-semibold text-gray-300 mb-3 text-xs uppercase tracking-wider">Investigation Method</h4>
+        <div className="flex space-x-3">
           <button
             onClick={() => handleMethodToggle('five_whys')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-5 py-2 rounded-full font-semibold text-sm transition-all ${
               rca.selectedMethod === 'five_whys'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-[#D5FF40] text-gray-900 shadow-md shadow-[#D5FF40]/10'
+                : 'bg-[#2A2A2A] text-gray-300 hover:bg-[#333333]'
             }`}
           >
             5 Whys
           </button>
           <button
             onClick={() => handleMethodToggle('fishbone')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-5 py-2 rounded-full font-semibold text-sm transition-all ${
               rca.selectedMethod === 'fishbone'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-[#D5FF40] text-gray-900 shadow-md shadow-[#D5FF40]/10'
+                : 'bg-[#2A2A2A] text-gray-300 hover:bg-[#333333]'
             }`}
           >
             Fishbone
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           Data persists when switching methods
         </p>
       </div>
@@ -128,27 +122,17 @@ export const InvestigationSection: React.FC = () => {
         />
       )}
 
-      <div className="mt-8 p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
-        <h4 className="font-medium text-gray-800 mb-3">Confirm Root Cause</h4>
+      <div className="mt-8 p-6 rounded-2xl border border-white/10 bg-[#2A2A2A]">
+        <h4 className="font-bold text-white mb-2 text-base">Quick Root Cause Confirmation</h4>
         {confirmedItems.length === 0 && (
-          <p className="text-sm text-yellow-700 bg-yellow-50 p-2 rounded mb-3">
-            ⚠️ Confirm at least one step/cause before finalizing root cause
+          <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl mb-3">
+            ⚠️ Confirm at least one step/cause before finalizing root cause summary below.
           </p>
         )}
         
         {confirmedItems.length > 0 && (
-          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <span className="font-medium">Confirmed items:</span>
-            </p>
-            <ul className="list-disc list-inside text-sm text-blue-700 mt-2">
-              {confirmedItems.slice(0, 3).map((item, i) => (
-                <li key={i}>
-                  {'answer' in item ? item.answer : item.cause_text}
-                </li>
-              ))}
-              {confirmedItems.length > 3 && <li>... and {confirmedItems.length - 3} more</li>}
-            </ul>
+          <div className="mb-4 p-3.5 bg-[#0D0D0D] rounded-xl border border-white/10">
+            <p className="text-xs text-gray-300 font-semibold mb-1">Confirmed items count: {confirmedItems.length}</p>
           </div>
         )}
 
@@ -156,15 +140,21 @@ export const InvestigationSection: React.FC = () => {
           value={rootCauseText}
           onChange={(e) => setRootCauseText(e.target.value)}
           placeholder="Summarize the root cause in your own words..."
-          className="w-full p-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3.5 bg-[#0D0D0D] text-gray-200 border border-white/10 rounded-xl mb-3 text-sm focus:ring-2 focus:ring-[#D5FF40]"
           rows={3}
         />
 
         <button
+          onClick={() => {
+            if (rootCauseText.trim()) {
+              dispatch(setConfirmedRootCause(rootCauseText.trim()))
+              setRootCauseText('')
+            }
+          }}
           disabled={confirmedItems.length === 0 || !rootCauseText.trim()}
-          className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="px-6 py-2.5 bg-[#D5FF40] text-gray-900 rounded-full hover:bg-[#c2eb35] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm transition-all shadow-md shadow-[#D5FF40]/10"
         >
-          Finalize Root Cause
+          Confirm Root Cause Summary
         </button>
       </div>
     </div>

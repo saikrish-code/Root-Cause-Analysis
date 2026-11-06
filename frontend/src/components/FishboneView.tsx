@@ -34,13 +34,13 @@ export const FishboneView: React.FC<FishboneViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-sm text-blue-800">
-          <span className="font-medium">Fishbone (Ishikawa) Diagram:</span> Organize root causes by category. Each category can have multiple contributing causes.
+      <div className="p-4 bg-[#2A2A2A] rounded-2xl border border-white/10">
+        <p className="text-xs text-gray-300 leading-relaxed">
+          <strong className="text-white">Fishbone (Ishikawa) Diagram:</strong> Organize root causes by category. Each category can have multiple contributing causes.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {FISHBONE_CATEGORIES.map((category) => (
           <FishboneCategoryColumn
             key={category.key}
@@ -52,12 +52,6 @@ export const FishboneView: React.FC<FishboneViewProps> = ({
             onRemove={(causeId) => onRemoveCause(causeId)}
           />
         ))}
-      </div>
-
-      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
-        <p className="text-sm text-gray-600">
-          💡 Tip: Confirm causes that are supported by evidence to track which factors contributed to the root cause
-        </p>
       </div>
     </div>
   )
@@ -81,18 +75,18 @@ const FishboneCategoryColumn: React.FC<FishboneCategoryColumnProps> = ({
   onRemove,
 }) => {
   return (
-    <div className="p-4 rounded-lg border border-gray-200 bg-white">
-      <div className="flex items-center space-x-2 mb-4">
-        <span className="text-2xl">{category.icon}</span>
-        <h5 className="font-semibold text-gray-800">{category.label}</h5>
+    <div className="p-5 rounded-2xl border border-white/10 bg-[#2A2A2A]">
+      <div className="flex items-center space-x-3 mb-4">
+        <span className="text-xl">{category.icon}</span>
+        <h5 className="font-bold text-white text-sm tracking-wide">{category.label}</h5>
       </div>
 
       {causes.length === 0 ? (
-        <div className="text-center py-6">
-          <p className="text-gray-500 text-sm mb-3">No causes yet</p>
+        <div className="text-center py-6 bg-[#0D0D0D] rounded-xl border border-white/5">
+          <p className="text-gray-500 text-xs mb-3">No causes yet</p>
           <button
             onClick={onAdd}
-            className="inline-block px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+            className="inline-block px-3.5 py-1.5 text-xs bg-[#1A1A1A] border border-[#D5FF40] text-[#D5FF40] rounded-full hover:bg-[#D5FF40] hover:text-gray-900 font-semibold transition-all"
           >
             + Add
           </button>
@@ -116,7 +110,7 @@ const FishboneCategoryColumn: React.FC<FishboneCategoryColumnProps> = ({
       {causes.length > 0 && (
         <button
           onClick={onAdd}
-          className="w-full px-3 py-2 text-sm border border-dashed border-blue-300 text-blue-600 rounded hover:bg-blue-50"
+          className="w-full px-3 py-2 text-xs border border-dashed border-[#D5FF40]/40 text-[#D5FF40] rounded-xl hover:bg-[#D5FF40]/5 font-semibold transition-all"
         >
           + Add Another
         </button>
@@ -152,55 +146,55 @@ const FishboneCauseCard: React.FC<FishboneCauseCardProps> = ({
 
   return (
     <div
-      className={`p-3 rounded-lg border-2 transition-colors ${
+      className={`p-3.5 rounded-xl border transition-all bg-[#0D0D0D] ${
         cause.isAIFilled
-          ? 'border-green-400 bg-green-50'
-          : 'border-gray-200 bg-white'
-      } ${isConfirmed ? 'ring-2 ring-green-300' : ''}`}
+          ? 'border-[#D5FF40]/50 ring-1 ring-[#D5FF40]/20'
+          : 'border-white/10'
+      } ${isConfirmed ? 'border-emerald-500/50' : ''}`}
     >
       {!isEditing ? (
         <div>
           <div className="flex items-start justify-between mb-2">
-            <p className="text-sm text-gray-800 font-medium leading-snug">
+            <p className="text-xs text-gray-200 font-medium leading-relaxed">
               {cause.cause_text}
             </p>
             <button
               onClick={onRemove}
-              className="text-gray-400 hover:text-red-600 text-lg leading-none ml-2 flex-shrink-0"
+              className="text-gray-500 hover:text-red-400 text-sm leading-none ml-2 flex-shrink-0"
             >
               ✕
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className="flex flex-wrap gap-1.5 mt-2">
             {isAISuggested && !isConfirmed && (
-              <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-semibold">
                 Unconfirmed
               </span>
             )}
             {cause.isAIFilled && (
-              <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] bg-[#D5FF40]/10 text-[#D5FF40] border border-[#D5FF40]/30 px-2 py-0.5 rounded-full font-semibold">
                 AI Suggested
               </span>
             )}
             {isConfirmed && (
-              <span className="text-xs bg-green-200 text-green-900 px-1.5 py-0.5 rounded font-medium">
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold">
                 ✓ Confirmed
               </span>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className="flex flex-wrap gap-2 mt-3">
             <button
               onClick={() => setIsEditing(true)}
-              className="text-xs px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              className="text-[10px] px-3 py-1 bg-[#1A1A1A] text-gray-300 border border-white/10 rounded-full hover:bg-[#333333]"
             >
               Edit
             </button>
             {isAISuggested && !isConfirmed && (
               <button
                 onClick={onConfirm}
-                className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+                className="text-[10px] px-3 py-1 bg-[#D5FF40] text-gray-900 rounded-full hover:bg-[#c2eb35] font-semibold"
               >
                 ✓ Confirm
               </button>
@@ -212,19 +206,19 @@ const FishboneCauseCard: React.FC<FishboneCauseCardProps> = ({
           <textarea
             value={editedText}
             onChange={(e) => setEditedText(e.target.value)}
-            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 text-xs bg-[#1A1A1A] border border-white/10 text-gray-200 rounded-xl focus:ring-2 focus:ring-[#D5FF40]"
             rows={2}
           />
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+              className="text-[10px] px-3 py-1 bg-[#D5FF40] text-gray-900 rounded-full font-semibold hover:bg-[#c2eb35]"
             >
               Save
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="text-xs px-2 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              className="text-[10px] px-3 py-1 bg-[#1A1A1A] text-gray-300 border border-white/10 rounded-full hover:bg-[#333333]"
             >
               Cancel
             </button>

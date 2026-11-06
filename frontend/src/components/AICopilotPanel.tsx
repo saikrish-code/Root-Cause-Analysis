@@ -149,23 +149,18 @@ export const AICopilotPanel: React.FC = () => {
       if (result.extraction.batch_lot_number) {
         parts.push(`Batch: ${result.extraction.batch_lot_number}`)
       }
-      const missing = result.extraction.missing_fields?.length || 0
-      if (missing > 0) {
-        parts.push(`⚠️ ${missing} fields could not be extracted`)
-      }
     }
 
     if (result.evidence_gap) {
-      parts.push(`\n✓ Identified ${result.evidence_gap.suggested_evidence_types?.length || 0} evidence items to collect`)
+      parts.push(`✓ Identified ${result.evidence_gap.suggested_evidence_types?.length || 0} evidence gaps`)
     }
 
-    if (result.rca) {
-      parts.push(`\n✓ Performed ${result.rca.method_used === 'five_whys' ? '5 Whys' : 'Fishbone'} analysis`)
-      parts.push(`Root cause: ${result.rca.root_cause}`)
+    if (result.rca && result.rca.root_cause_proposals) {
+      parts.push(`✓ Proposed ${result.rca.root_cause_proposals.length} root cause hypotheses`)
     }
 
-    if (result.capa) {
-      parts.push(`\n✓ Proposed ${result.capa.proposed_capas?.length || 0} CAPA actions`)
+    if (result.capa && result.capa.proposed_capas) {
+      parts.push(`✓ Proposed ${result.capa.proposed_capas?.length || 0} CAPA actions`)
     }
 
     return parts.join('\n')
@@ -189,22 +184,25 @@ export const AICopilotPanel: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">AI Copilot</h2>
-        <p className="text-sm text-gray-500">Paste text or drop a PDF to analyze</p>
+    <div className="h-full flex flex-col bg-[#1A1A1A] text-gray-200">
+      <div className="p-5 border-b border-white/10 flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-bold text-white tracking-wide flex items-center">
+            <span className="w-2 h-2 rounded-full bg-[#D5FF40] inline-block mr-2 animate-pulse"></span>
+            AI Copilot
+          </h2>
+          <p className="text-xs text-gray-400 mt-0.5">Drop a PDF or paste text to analyze</p>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-5 space-y-4">
         {aiSession.messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
-            <div className="mb-4">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+          <div className="text-center text-gray-500 mt-12 px-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#2A2A2A] border border-white/10 flex items-center justify-center mx-auto mb-3 text-[#D5FF40]">
+              ⚡
             </div>
-            <p className="text-sm">
-              Paste a complaint email or upload a PDF document to start the analysis.
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Paste a complaint email or upload a PDF document to start automated RCA and evidence gap detection.
             </p>
           </div>
         ) : (
@@ -214,29 +212,35 @@ export const AICopilotPanel: React.FC = () => {
                 key={message.id}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
+                {message.role === 'assistant' && (
+                  <div className="w-7 h-7 rounded-xl bg-[#2A2A2A] border border-[#D5FF40]/30 text-[#D5FF40] flex items-center justify-center text-xs flex-shrink-0 mr-2 mt-1">
+                    ⚡
+                  </div>
+                )}
                 <div
-                  className={`max-w-[85%] rounded-lg p-3 ${
+                  className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed ${
                     message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-[#D5FF40] text-gray-900 font-medium rounded-br-none'
+                      : 'bg-[#2A2A2A] text-gray-200 border border-white/10 rounded-bl-none shadow-sm'
                   }`}
                 >
-                  <pre className="whitespace-pre-wrap text-sm font-sans">{message.content}</pre>
-                  <div className={`text-xs mt-1 ${
-                    message.role === 'user' ? 'text-blue-200' : 'text-gray-500'
+                  <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
+                  <div className={`text-[10px] mt-2 ${
+                    message.role === 'user' ? 'text-gray-700 text-right' : 'text-gray-400 text-right'
                   }`}>
-                    {new Date(message.timestamp).toLocaleTimeString()}
+                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
             ))}
             {aiSession.isProcessing && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-800 rounded-lg p-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span className="text-sm">{aiSession.processingStep || 'Processing...'}</span>
-                  </div>
+              <div className="flex justify-start items-center space-x-2">
+                <div className="w-7 h-7 rounded-xl bg-[#2A2A2A] border border-[#D5FF40]/30 text-[#D5FF40] flex items-center justify-center text-xs flex-shrink-0">
+                  ⚡
+                </div>
+                <div className="bg-[#2A2A2A] text-gray-300 border border-white/10 rounded-2xl rounded-bl-none p-3.5 text-xs flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#D5FF40] border-t-transparent"></div>
+                  <span>{aiSession.processingStep || 'Analyzing deviation & extracting fields...'}</span>
                 </div>
               </div>
             )}
@@ -246,21 +250,19 @@ export const AICopilotPanel: React.FC = () => {
       </div>
 
       <div
-        className="p-4 border-t border-gray-200"
+        className="p-5 border-t border-white/10 bg-[#1A1A1A]"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
         {selectedFile && (
-          <div className="mb-2 p-2 bg-blue-50 rounded-lg flex items-center justify-between">
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              <span className="text-sm text-blue-800">{selectedFile.name}</span>
+          <div className="mb-3 p-2.5 bg-[#2A2A2A] border border-[#D5FF40]/30 rounded-xl flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-[#D5FF40]">📄</span>
+              <span className="text-xs text-gray-200 font-medium">{selectedFile.name}</span>
             </div>
             <button
               onClick={() => setSelectedFile(null)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-gray-400 hover:text-white text-xs"
             >
               ✕
             </button>
@@ -270,13 +272,13 @@ export const AICopilotPanel: React.FC = () => {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Paste complaint text here..."
-          className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          rows={4}
+          placeholder="Paste complaint or description..."
+          className="w-full p-3.5 bg-[#0D0D0D] border border-white/10 text-gray-200 rounded-2xl resize-none text-xs focus:ring-2 focus:ring-[#D5FF40] focus:border-transparent placeholder-gray-500"
+          rows={3}
           disabled={aiSession.isProcessing}
         />
 
-        <div className="mt-3 flex items-center space-x-2">
+        <div className="mt-3 flex items-center justify-between">
           <label className="cursor-pointer">
             <input
               ref={fileInputRef}
@@ -286,26 +288,23 @@ export const AICopilotPanel: React.FC = () => {
               className="hidden"
               disabled={aiSession.isProcessing}
             />
-            <span className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
-              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-              </svg>
-              Attach File
+            <span className="inline-flex items-center px-3.5 py-2 bg-[#2A2A2A] border border-white/10 rounded-full text-xs text-gray-300 hover:border-[#D5FF40] hover:text-[#D5FF40] transition-all">
+              📎 Attach PDF
             </span>
           </label>
 
           <button
             onClick={handleSubmit}
             disabled={aiSession.isProcessing || (!inputText.trim() && !selectedFile)}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2 bg-[#D5FF40] text-gray-900 rounded-full text-xs font-semibold hover:bg-[#c2eb35] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-[#D5FF40]/10"
           >
-            {aiSession.isProcessing ? 'Processing...' : 'Analyze'}
+            {aiSession.isProcessing ? 'Analyzing...' : 'Send to Copilot'}
           </button>
         </div>
 
         {aiSession.error && (
-          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">{aiSession.error}</p>
+          <div className="mt-3 p-3 bg-red-950/50 border border-red-500/30 rounded-xl">
+            <p className="text-xs text-red-400">{aiSession.error}</p>
           </div>
         )}
       </div>
