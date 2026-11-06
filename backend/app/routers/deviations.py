@@ -55,6 +55,12 @@ def create_deviation(
     return db_deviation
 
 
+@router.get("/{id}/audit", response_model=List[AuditLogResponse])
+def get_deviation_audit_log(id: int, db: Session = Depends(get_db)):
+    logs = db.query(AuditLog).order_by(AuditLog.changed_at.desc()).all()
+    return logs
+
+
 @router.patch("/{id}", response_model=DeviationResponse)
 def update_deviation_partial(
     id: int,
@@ -77,7 +83,7 @@ def update_deviation_partial(
                 field_changed=field,
                 old_value=str(old_value) if old_value is not None else None,
                 new_value=str(value),
-                changed_by="system"
+                changed_by="user"
             )
     
     db.commit()
