@@ -9,3 +9,6 @@ langgraph==0.0.26
 langchain-core==0.1.33
 langchain-groq==0.0.1
 python-dotenv==1.0.1
+pytest==8.0.0
+pytest-asyncio==0.23.3
+httpx==0.26.0
