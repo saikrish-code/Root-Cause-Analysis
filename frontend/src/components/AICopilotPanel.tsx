@@ -67,25 +67,21 @@ export const AICopilotPanel: React.FC = () => {
         status: 'In Progress' as const,
         ai_generated: true,
         reviewed_by_user: false,
-        confirmed_root_cause: result.rca.root_cause,
+        confirmed_root_cause: null,
         confidence_notes: result.rca.evidence_support_notes,
-        five_whys_steps: result.rca.method_used === 'five_whys' ? result.rca.contributing_factors.map((factor, index) => ({
+        five_whys_steps: [],
+        fishbone_causes: [],
+        root_cause_proposals: (result.rca.root_cause_proposals || []).map((prop, index) => ({
           id: -(index + 1),
           rca_investigation_id: -1,
-          step_number: index + 1,
-          why_question: null,
-          answer: factor,
-          is_ai_suggested: true,
+          cause_text: prop.cause_type,
+          ai_rationale: prop.ai_rationale,
+          is_primary: prop.is_primary,
+          confidence_score: Math.round(prop.confidence_score * 100),
+          supporting_evidence_ids: JSON.stringify(prop.supporting_evidence_ids || []),
+          status: 'proposed',
           user_edited: false,
-        })) : [],
-        fishbone_causes: result.rca.method_used === 'fishbone' ? result.rca.contributing_factors.map((factor, index) => ({
-          id: -(index + 1),
-          rca_investigation_id: -1,
-          category: 'Method',
-          cause_text: factor,
-          is_ai_suggested: true,
-          user_edited: false,
-        })) : [],
+        })),
       }
       dispatch(populateRCAFromAI(rcaData))
     }

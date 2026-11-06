@@ -36,9 +36,15 @@ export interface AIProcessResult {
   } | null
   rca: {
     method_used: string
-    root_cause: string
-    contributing_factors: string[]
-    confidence_score: number
+    root_cause_proposals: Array<{
+      cause_type: string
+      is_primary: boolean
+      ai_rationale: string
+      supporting_evidence_ids: number[]
+      confidence_score: number
+      confidence_label: string
+    }>
+    confidence_summary: string
     evidence_support_notes: string
     limitations: string
   } | null

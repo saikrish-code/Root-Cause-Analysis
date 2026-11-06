@@ -14,10 +14,10 @@ class TestPDFExtraction:
 
         mock_pdf_content = b"%PDF-1.4\nThis is a mock PDF with extracted text content."
 
-        with patch('app.ai.pdf_utils.pdfplumber') as mock_pg:
+        with patch('pdfplumber.open') as mock_pg:
             mock_page = MagicMock()
-            mock_page.extract_text.return_value = "Extracted text from PDF"
-            mock_pg.open.return_value.__enter__.return_value.pages = [mock_page]
+            mock_page.extract_text.return_value = "Extracted text from PDF document content that is long enough"
+            mock_pg.return_value.__enter__.return_value.pages = [mock_page]
 
             result = extract_text(mock_pdf_content, "test.pdf")
             assert "Extracted text from PDF" in result
@@ -27,10 +27,10 @@ class TestPDFExtraction:
 
         mock_pdf_content = b"%PDF-1.4\nShort"
 
-        with patch('app.ai.pdf_utils.pdfplumber') as mock_pg:
+        with patch('pdfplumber.open') as mock_pg:
             mock_page = MagicMock()
             mock_page.extract_text.return_value = "Short"
-            mock_pg.open.return_value.__enter__.return_value.pages = [mock_page]
+            mock_pg.return_value.__enter__.return_value.pages = [mock_page]
 
             with pytest.raises(PDFTooShortError) as exc_info:
                 extract_text(mock_pdf_content, "test.pdf")
@@ -53,7 +53,7 @@ class TestPDFExtraction:
 
 
 class TestIngestEndpoint:
-    @patch('app.ai.graph.run_full_pipeline')
+    @patch('app.routers.ai.run_full_pipeline')
     def test_ingest_with_raw_text(self, mock_pipeline):
         from app.ai.schemas import IntakeResult, ExtractedDeviation, EvidenceGap
 
@@ -89,11 +89,11 @@ class TestIngestEndpoint:
         assert data["extraction"]["product_name"] == "Test"
         assert data["all_nodes_completed"] is True
 
-    @patch('app.ai.graph.run_full_pipeline')
-    def test_ingest_with_empty_raw_text_returns_error(self):
+    @patch('app.routers.ai.run_full_pipeline')
+    def test_ingest_with_empty_raw_text_returns_error(self, mock_pipeline):
         response = client.post(
             "/api/ai/ingest",
-            data={"raw_text": ""}
+            data={"raw_text": "short"}
         )
         assert response.status_code == 400
         assert "too short or empty" in response.json()["detail"]
@@ -103,8 +103,8 @@ class TestIngestEndpoint:
         assert response.status_code == 400
         assert "Either raw_text or file must be provided" in response.json()["detail"]
 
-    @patch('app.ai.graph.run_full_pipeline')
-    @patch('app.ai.pdf_utils.extract_text')
+    @patch('app.routers.ai.run_full_pipeline')
+    @patch('app.routers.ai.extract_text')
     def test_ingest_with_pdf_file(self, mock_extract_text, mock_pipeline):
         from app.ai.schemas import IntakeResult, ExtractedDeviation, EvidenceGap
 
@@ -142,7 +142,7 @@ class TestIngestEndpoint:
         assert data["extraction"]["product_name"] == "Product X"
         assert data["extraction"]["severity"] == "Critical"
 
-    @patch('app.ai.pdf_utils.extract_text')
+    @patch('app.routers.ai.extract_text')
     def test_ingest_with_garbled_pdf_returns_error(self, mock_extract_text):
         mock_extract_text.side_effect = PDFTooShortError("Couldn't read this PDF")
 
@@ -154,7 +154,7 @@ class TestIngestEndpoint:
         assert response.status_code == 400
         assert "Couldn't read this PDF" in response.json()["detail"]
 
-    @patch('app.ai.graph.run_full_pipeline')
+    @patch('app.routers.ai.run_full_pipeline')
     def test_ingest_returns_same_shape_as_process(self, mock_pipeline):
         from app.ai.schemas import IntakeResult, ExtractedDeviation, EvidenceGap
 

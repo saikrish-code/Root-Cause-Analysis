@@ -58,9 +58,9 @@ class Deviation(Base):
     batch_lot_number = Column(String(100), nullable=True)
     manufacturing_date = Column(Date, nullable=True)
     detected_date = Column(Date, nullable=True)
-    site_block = Column(Enum(SiteBlock), nullable=False)
-    severity = Column(Enum(Severity), nullable=False)
-    status = Column(Enum(DeviationStatus), nullable=False, default=DeviationStatus.Open)
+    site_block = Column(Enum(SiteBlock, values_callable=lambda x: [e.value for e in x]), nullable=False)
+    severity = Column(Enum(Severity, values_callable=lambda x: [e.value for e in x]), nullable=False)
+    status = Column(Enum(DeviationStatus, values_callable=lambda x: [e.value for e in x]), nullable=False, default=DeviationStatus.Open)
     source_document_text = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -90,8 +90,8 @@ class RCAInvestigation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     deviation_id = Column(Integer, ForeignKey("deviations.id", ondelete="CASCADE"), nullable=False)
-    method = Column(Enum(RCAMethod), nullable=False)
-    status = Column(Enum(RCAStatus), nullable=False, default=RCAStatus.In_Progress)
+    method = Column(Enum(RCAMethod, values_callable=lambda x: [e.value for e in x]), nullable=False)
+    status = Column(Enum(RCAStatus, values_callable=lambda x: [e.value for e in x]), nullable=False, default=RCAStatus.In_Progress)
     ai_generated = Column(Boolean, default=False, nullable=False)
     reviewed_by_user = Column(Boolean, default=False, nullable=False)
     confirmed_root_cause = Column(Text, nullable=True)
@@ -102,6 +102,7 @@ class RCAInvestigation(Base):
     deviation = relationship("Deviation", back_populates="rca_investigations")
     five_whys_steps = relationship("FiveWhysStep", back_populates="rca_investigation", cascade="all, delete-orphan")
     fishbone_causes = relationship("FishboneCause", back_populates="rca_investigation", cascade="all, delete-orphan")
+    root_cause_proposals = relationship("RootCauseProposal", back_populates="rca_investigation", cascade="all, delete-orphan")
 
 
 class FiveWhysStep(Base):
@@ -131,17 +132,35 @@ class FishboneCause(Base):
     rca_investigation = relationship("RCAInvestigation", back_populates="fishbone_causes")
 
 
+class RootCauseProposal(Base):
+    __tablename__ = "root_cause_proposals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    rca_investigation_id = Column(Integer, ForeignKey("rca_investigations.id", ondelete="CASCADE"), nullable=False)
+    cause_text = Column(Text, nullable=False)
+    ai_rationale = Column(Text, nullable=False)
+    is_primary = Column(Boolean, default=False, nullable=False)
+    confidence_score = Column(Integer, nullable=False)
+    supporting_evidence_ids = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default='proposed')
+    user_edited = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    rca_investigation = relationship("RCAInvestigation", back_populates="root_cause_proposals")
+
+
 class CAPAAction(Base):
     __tablename__ = "capa_actions"
 
     id = Column(Integer, primary_key=True, index=True)
     deviation_id = Column(Integer, ForeignKey("deviations.id", ondelete="CASCADE"), nullable=False)
-    action_type = Column(Enum(CapaActionType), nullable=False)
+    action_type = Column(Enum(CapaActionType, values_callable=lambda x: [e.value for e in x]), nullable=False)
     description = Column(Text, nullable=False)
     rationale = Column(Text, nullable=True)
     owner = Column(String(255), nullable=True)
     due_date = Column(Date, nullable=True)
-    status = Column(Enum(CapaStatus), nullable=False, default=CapaStatus.Proposed)
+    status = Column(Enum(CapaStatus, values_callable=lambda x: [e.value for e in x]), nullable=False, default=CapaStatus.Proposed)
     ai_generated = Column(Boolean, default=False, nullable=False)
     reviewed_by_user = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -160,5 +179,5 @@ class AuditLog(Base):
     old_value = Column(Text, nullable=True)
     new_value = Column(Text, nullable=True)
     changed_by = Column(String(255), nullable=True)
-    source = Column(Enum(AuditSource), nullable=False)
+    source = Column(Enum(AuditSource, values_callable=lambda x: [e.value for e in x]), nullable=False)
     changed_at = Column(DateTime, default=datetime.utcnow, nullable=False)

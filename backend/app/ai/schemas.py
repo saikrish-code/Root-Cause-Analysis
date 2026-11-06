@@ -32,12 +32,20 @@ class EvidenceGap(BaseModel):
     risk_flags: List[str] = Field(default_factory=list, description="Potential compliance or quality risks flagged by AI")
 
 
+class RootCauseProposal(BaseModel):
+    cause_type: str = Field(..., description="Root cause or contributing factor")
+    is_primary: bool = Field(False, description="True if this is the primary root cause")
+    ai_rationale: str = Field(..., description="AI's explanation for why this is a cause")
+    supporting_evidence_ids: List[int] = Field(default_factory=list, description="IDs of evidence items that support this cause")
+    confidence_score: float = Field(..., ge=0, le=1)
+    confidence_label: str = Field(..., description="High, Medium, or Low based on evidence")
+
+
 class RCAResult(BaseModel):
     method_used: str = Field(..., description="five_whys or fishbone")
-    root_cause: str = Field(..., description="Primary root cause identified")
-    contributing_factors: List[str] = Field(default_factory=list, description="Secondary contributing factors")
-    confidence_score: float = Field(..., ge=0, le=1, description="Confidence in root cause accuracy")
-    evidence_support_notes: str = Field(..., description="Explanation of what evidence supports this conclusion")
+    root_cause_proposals: List[RootCauseProposal] = Field(default_factory=list, description="AI-proposed root causes with evidence links")
+    confidence_summary: str = Field(..., description="Overall confidence assessment")
+    evidence_support_notes: str = Field(..., description="Summary of evidence supporting all causes")
     limitations: str = Field(..., description="Any limitations or assumptions in the analysis")
 
 

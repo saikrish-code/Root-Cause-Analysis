@@ -64,7 +64,7 @@ Always output valid JSON only, no markdown, no explanations."""
             raise RuntimeError(f"Groq API error: {e}")
 
     def extraction(self, raw_text: str) -> "ExtractedDeviation":
-        from ai.schemas import ExtractedDeviation
+        from app.ai.schemas import ExtractedDeviation
         user_message = {
             "role": "user",
             "content": f"Extract deviation information from this source text:\n\n{raw_text}"
@@ -72,7 +72,7 @@ Always output valid JSON only, no markdown, no explanations."""
         return self._call_groq([user_message], ExtractedDeviation)
 
     def evidence_gap(self, extraction: "ExtractedDeviation", existing_evidence: list) -> "EvidenceGap":
-        from ai.schemas import EvidenceGap
+        from app.ai.schemas import EvidenceGap
         context = {
             "extracted": extraction.model_dump(),
             "existing_evidence": existing_evidence or []
@@ -84,7 +84,7 @@ Always output valid JSON only, no markdown, no explanations."""
         return self._call_groq([user_message], EvidenceGap)
 
     def rca_analysis(self, extraction: "ExtractedDeviation", evidence: list, method: str = "five_whys") -> "RCAResult":
-        from ai.schemas import RCAResult
+        from app.ai.schemas import RCAResult
         context = {
             "extraction": extraction.model_dump(),
             "evidence": evidence or [],
@@ -92,12 +92,12 @@ Always output valid JSON only, no markdown, no explanations."""
         }
         user_message = {
             "role": "user",
-            "content": f"Perform {method} root cause analysis:\n\n{context}"
+            "content": f"Perform {method} root cause analysis. Propose root causes and contributing factors, providing an AI rationale, confidence score (0-1), and linking each to supporting evidence IDs from the provided evidence list if applicable:\n\n{context}"
         }
         return self._call_groq([user_message], RCAResult)
 
     def capa_proposal(self, extraction: "ExtractedDeviation", rca: "RCAResult") -> "CAPAResult":
-        from ai.schemas import CAPAResult
+        from app.ai.schemas import CAPAResult
         context = {
             "extraction": extraction.model_dump(),
             "rca": rca.model_dump()

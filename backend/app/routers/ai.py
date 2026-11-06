@@ -14,9 +14,9 @@ class ProcessRequest(BaseModel):
 
 
 class ProcessResponse(BaseModel):
-    intake: Dict[str, Any]
-    extraction: Dict[str, Any]
-    evidence_gap: Dict[str, Any]
+    intake: Optional[Dict[str, Any]] = None
+    extraction: Optional[Dict[str, Any]] = None
+    evidence_gap: Optional[Dict[str, Any]] = None
     rca: Optional[Dict[str, Any]] = None
     capa: Optional[Dict[str, Any]] = None
     all_nodes_completed: bool

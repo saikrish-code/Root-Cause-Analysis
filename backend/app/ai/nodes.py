@@ -47,7 +47,7 @@ def extraction_node(state: PipelineState) -> PipelineState:
         extraction = groq_client.extraction(raw_text)
         state["extraction"] = extraction
     except Exception as e:
-        state["errors"] = state.get("errors", []) + [f"Extraction failed: {str(e)}"]
+        state["errors"] = (state.get("errors") or []) + [f"Extraction failed: {str(e)}"]
     return state
 
 
@@ -58,14 +58,14 @@ def evidence_gap_node(state: PipelineState) -> PipelineState:
     existing_evidence = state.get("existing_evidence", [])
 
     if not extraction:
-        state["errors"] = state.get("errors", []) + ["Cannot run evidence gap analysis: no extraction"]
+        state["errors"] = (state.get("errors") or []) + ["Cannot run evidence gap analysis: no extraction"]
         return state
 
     try:
         evidence_gap = groq_client.evidence_gap(extraction, existing_evidence)
         state["evidence_gap"] = evidence_gap
     except Exception as e:
-        state["errors"] = state.get("errors", []) + [f"Evidence gap analysis failed: {str(e)}"]
+        state["errors"] = (state.get("errors") or []) + [f"Evidence gap analysis failed: {str(e)}"]
     return state
 
 
@@ -76,7 +76,7 @@ def rca_node(state: PipelineState) -> PipelineState:
     existing_evidence = state.get("existing_evidence", [])
 
     if not extraction:
-        state["errors"] = state.get("errors", []) + ["Cannot run RCA: no extraction"]
+        state["errors"] = (state.get("errors") or []) + ["Cannot run RCA: no extraction"]
         return state
 
     method = "five_whys"
@@ -87,7 +87,7 @@ def rca_node(state: PipelineState) -> PipelineState:
         rca = groq_client.rca_analysis(extraction, existing_evidence, method)
         state["rca"] = rca
     except Exception as e:
-        state["errors"] = state.get("errors", []) + [f"RCA analysis failed: {str(e)}"]
+        state["errors"] = (state.get("errors") or []) + [f"RCA analysis failed: {str(e)}"]
     return state
 
 
@@ -98,14 +98,14 @@ def capa_node(state: PipelineState) -> PipelineState:
     rca = state.get("rca")
 
     if not extraction or not rca:
-        state["errors"] = state.get("errors", []) + ["Cannot propose CAPA: missing extraction or RCA"]
+        state["errors"] = (state.get("errors") or []) + ["Cannot propose CAPA: missing extraction or RCA"]
         return state
 
     try:
         capa = groq_client.capa_proposal(extraction, rca)
         state["capa"] = capa
     except Exception as e:
-        state["errors"] = state.get("errors", []) + [f"CAPA proposal failed: {str(e)}"]
+        state["errors"] = (state.get("errors") or []) + [f"CAPA proposal failed: {str(e)}"]
     return state
 
 

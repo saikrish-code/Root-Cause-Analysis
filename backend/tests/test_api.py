@@ -77,6 +77,7 @@ class TestDeviationsCRUD:
             "site_block": "QC Lab",
             "severity": "Critical"
         })
+        print("STATUS:", create_response.status_code, "TEXT:", create_response.text)
         dev_id = create_response.json()["id"]
         
         response = client.get(f"/api/deviations/{dev_id}")

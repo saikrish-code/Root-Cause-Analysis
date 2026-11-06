@@ -91,8 +91,36 @@ class FishboneCauseResponse(FishboneCauseBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class RootCauseProposalBase(BaseModel):
+    cause_text: str
+    ai_rationale: str
+    is_primary: bool = False
+    confidence_score: int
+    supporting_evidence_ids: Optional[str] = None
+    status: str = "proposed"
+    user_edited: bool = False
+
+class RootCauseProposalCreate(RootCauseProposalBase):
+    pass
+
+class RootCauseProposalUpdate(BaseModel):
+    cause_text: Optional[str] = None
+    ai_rationale: Optional[str] = None
+    is_primary: Optional[bool] = None
+    confidence_score: Optional[int] = None
+    supporting_evidence_ids: Optional[str] = None
+    status: Optional[str] = None
+    user_edited: Optional[bool] = None
+
+class RootCauseProposalResponse(RootCauseProposalBase):
+    id: int
+    rca_investigation_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class RCAInvestigationBase(BaseModel):
+    deviation_id: int
     method: RCAMethod
     status: RCAStatus = RCAStatus.In_Progress
     ai_generated: bool = False
@@ -103,6 +131,7 @@ class RCAInvestigationBase(BaseModel):
 class RCAInvestigationCreate(RCAInvestigationBase):
     five_whys_steps: Optional[List[FiveWhysStepCreate]] = None
     fishbone_causes: Optional[List[FishboneCauseCreate]] = None
+    root_cause_proposals: Optional[List[RootCauseProposalCreate]] = None
 
 class RCAInvestigationUpdate(BaseModel):
     method: Optional[RCAMethod] = None
@@ -119,6 +148,7 @@ class RCAInvestigationResponse(RCAInvestigationBase):
     updated_at: datetime
     five_whys_steps: List[FiveWhysStepResponse] = []
     fishbone_causes: List[FishboneCauseResponse] = []
+    root_cause_proposals: List[RootCauseProposalResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -6,6 +6,7 @@ import { selectEvidence } from '../store/evidenceSlice'
 import { selectRCA } from '../store/rcaSlice'
 import { selectCAPA } from '../store/capaSlice'
 import { InvestigationSection } from './InvestigationSection'
+import { RootCauseSection } from './RootCauseSection'
 
 interface CollapsibleSectionProps {
   title: string
@@ -292,39 +293,7 @@ export const RCAForm: React.FC = () => {
       </CollapsibleSection>
 
       <CollapsibleSection title="5. Root Cause & Contributing Factors">
-        {rca.investigation?.confirmed_root_cause ? (
-          <div className={`p-4 rounded-lg border ${
-            rca.investigation.isAIFilled ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
-          }`}>
-            <div className="flex items-center mb-3">
-              <h4 className="font-medium text-gray-800">Root Cause</h4>
-              {rca.investigation.isAIFilled && <AIFilledBadge />}
-              {!rca.investigation.confirmedByUser && <UnconfirmedBadge />}
-            </div>
-            <p className="text-gray-800 mb-4">{rca.investigation.confirmed_root_cause}</p>
-            {rca.investigation.contributing_factors && rca.investigation.contributing_factors.length > 0 && (
-              <>
-                <h5 className="font-medium text-gray-700 mb-2">Contributing Factors</h5>
-                <ul className="list-disc list-inside space-y-1 text-gray-600">
-                  {rca.investigation.contributing_factors.map((factor, i) => (
-                    <li key={i}>{factor}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-            {rca.investigation.confidence_notes && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <span className="font-medium">Confidence Notes:</span> {rca.investigation.confidence_notes}
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">
-            Root cause will be determined after investigation
-          </p>
-        )}
+        <RootCauseSection />
       </CollapsibleSection>
 
       <CollapsibleSection title="6. CAPA Recommendations">

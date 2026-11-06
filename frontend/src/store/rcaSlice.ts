@@ -13,6 +13,20 @@ export interface FiveWhysStep {
   confirmedByUser?: boolean
 }
 
+export interface RootCauseProposal {
+  id: number
+  rca_investigation_id: number
+  cause_text: string
+  ai_rationale: string
+  is_primary: boolean
+  confidence_score: number
+  supporting_evidence_ids: string | null
+  status: string
+  user_edited: boolean
+  isAIFilled?: boolean
+  confirmedByUser?: boolean
+}
+
 export interface FishboneCause {
   id: number
   rca_investigation_id: number
@@ -35,6 +49,7 @@ export interface RCAInvestigation {
   confidence_notes: string | null
   five_whys_steps: FiveWhysStep[]
   fishbone_causes: FishboneCause[]
+  root_cause_proposals: RootCauseProposal[]
   isAIFilled?: boolean
   confirmedByUser?: boolean
 }
@@ -206,6 +221,41 @@ const rcaSlice = createSlice({
         state.investigation.fishbone_causes = state.investigation.fishbone_causes.filter(c => c.id !== action.payload)
       }
     },
+    confirmProposal: (state, action: PayloadAction<number>) => {
+      if (state.investigation) {
+        const proposal = state.investigation.root_cause_proposals?.find(p => p.id === action.payload)
+        if (proposal) {
+          proposal.status = 'confirmed'
+          proposal.confirmedByUser = true
+        }
+      }
+    },
+    editProposal: (state, action: PayloadAction<{ id: number; cause_text: string }>) => {
+      if (state.investigation) {
+        const proposal = state.investigation.root_cause_proposals?.find(p => p.id === action.payload.id)
+        if (proposal) {
+          proposal.cause_text = action.payload.cause_text
+          proposal.user_edited = true
+          proposal.status = 'confirmed'
+          proposal.confirmedByUser = true
+        }
+      }
+    },
+    rejectProposal: (state, action: PayloadAction<number>) => {
+      if (state.investigation) {
+        state.investigation.root_cause_proposals = (state.investigation.root_cause_proposals || []).filter(
+          p => p.id !== action.payload
+        )
+      }
+    },
+    setConfirmedRootCause: (state, action: PayloadAction<string>) => {
+      if (state.investigation) {
+        state.investigation.confirmed_root_cause = action.payload
+        state.investigation.confirmedByUser = true
+        state.investigation.reviewed_by_user = true
+        state.investigation.status = 'Completed'
+      }
+    },
     confirmRootCause: (state, action: PayloadAction<string>) => {
       if (state.investigation) {
         state.investigation.confirmed_root_cause = action.payload
@@ -219,14 +269,19 @@ const rcaSlice = createSlice({
         ...action.payload,
         isAIFilled: true,
         confirmedByUser: false,
-        five_whys_steps: action.payload.five_whys_steps.map(step => ({
+        five_whys_steps: (action.payload.five_whys_steps || []).map(step => ({
           ...step,
           isAIFilled: step.is_ai_suggested,
           confirmedByUser: false,
         })),
-        fishbone_causes: action.payload.fishbone_causes.map(cause => ({
+        fishbone_causes: (action.payload.fishbone_causes || []).map(cause => ({
           ...cause,
           isAIFilled: cause.is_ai_suggested,
+          confirmedByUser: false,
+        })),
+        root_cause_proposals: (action.payload.root_cause_proposals || []).map(p => ({
+          ...p,
+          isAIFilled: true,
           confirmedByUser: false,
         })),
       }
@@ -335,6 +390,10 @@ export const {
   updateFishboneCause,
   confirmFishboneCause,
   removeFishboneCause,
+  confirmProposal,
+  editProposal,
+  rejectProposal,
+  setConfirmedRootCause,
   confirmRootCause,
   populateFromAI,
   clearRCA,

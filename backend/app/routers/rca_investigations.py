@@ -3,13 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from app.db.session import get_db
 from app.models.deviation import (
-    Deviation, RCAInvestigation, FiveWhysStep, FishboneCause,
+    Deviation, RCAInvestigation, FiveWhysStep, FishboneCause, RootCauseProposal,
     AuditLog, AuditSource
 )
 from app.schemas.deviation import (
     RCAInvestigationCreate, RCAInvestigationUpdate, RCAInvestigationResponse,
     FiveWhysStepCreate, FiveWhysStepUpdate, FiveWhysStepResponse,
     FishboneCauseCreate, FishboneCauseUpdate, FishboneCauseResponse,
+    RootCauseProposalCreate, RootCauseProposalUpdate, RootCauseProposalResponse,
     DeviationCreate, DeviationUpdate, DeviationResponse, DeviationFullResponse,
     AuditLogResponse
 )
@@ -58,7 +59,7 @@ def create_rca_investigation(
     investigation: RCAInvestigationCreate,
     db: Session = Depends(get_db)
 ):
-    db_investigation = RCAInvestigation(**investigation.model_dump(exclude={"five_whys_steps", "fishbone_causes"}))
+    db_investigation = RCAInvestigation(**investigation.model_dump(exclude={"five_whys_steps", "fishbone_causes", "root_cause_proposals"}))
     db.add(db_investigation)
     db.commit()
     db.refresh(db_investigation)
@@ -67,6 +68,7 @@ def create_rca_investigation(
         for step in investigation.five_whys_steps:
             db_step = FiveWhysStep(**step.model_dump(), rca_investigation_id=db_investigation.id)
             db.add(db_step)
+            db.flush()
             if step.is_ai_suggested:
                 audit_ai_field_change(
                     db=db,
@@ -81,6 +83,7 @@ def create_rca_investigation(
         for cause in investigation.fishbone_causes:
             db_cause = FishboneCause(**cause.model_dump(), rca_investigation_id=db_investigation.id)
             db.add(db_cause)
+            db.flush()
             if cause.is_ai_suggested:
                 audit_ai_field_change(
                     db=db,
@@ -90,11 +93,16 @@ def create_rca_investigation(
                     new_value=str(cause.is_ai_suggested),
                     changed_by="AI-Agent"
                 )
+
+    if investigation.root_cause_proposals:
+        for proposal in investigation.root_cause_proposals:
+            db_prop = RootCauseProposal(**proposal.model_dump(), rca_investigation_id=db_investigation.id)
+            db.add(db_prop)
     
     db.commit()
     db.refresh(db_investigation)
     
-    db.expire(db_investigation, ["five_whys_steps", "fishbone_causes"])
+    db.expire(db_investigation, ["five_whys_steps", "fishbone_causes", "root_cause_proposals"])
     
     return db_investigation
 
@@ -158,8 +166,83 @@ def delete_rca_investigation(id: int, db: Session = Depends(get_db)):
     return None
 
 
-@router.get("/{id}/steps", response_model=List[FiveWhysStepResponse])
-def read_five_whys_steps(id: int, db: Session = Depends(get_db)):
+@router.get("/{id}/proposals", response_model=List[RootCauseProposalResponse])
+def read_root_cause_proposals(id: int, db: Session = Depends(get_db)):
+    proposals = (
+        db.query(RootCauseProposal)
+        .filter(RootCauseProposal.rca_investigation_id == id, RootCauseProposal.status != 'rejected')
+        .all()
+    )
+    return proposals
+
+
+@router.post("/{id}/proposals", response_model=RootCauseProposalResponse, status_code=status.HTTP_201_CREATED)
+def create_root_cause_proposal(
+    id: int,
+    proposal: RootCauseProposalCreate,
+    db: Session = Depends(get_db)
+):
+    db_investigation = db.query(RCAInvestigation).filter(RCAInvestigation.id == id).first()
+    if db_investigation is None:
+        raise HTTPException(status_code=404, detail="RCA investigation not found")
+    
+    db_proposal = RootCauseProposal(**proposal.model_dump(), rca_investigation_id=id)
+    db.add(db_proposal)
+    db.commit()
+    db.refresh(db_proposal)
+    return db_proposal
+
+
+@router.patch("/proposals/{proposal_id}", response_model=RootCauseProposalResponse)
+def update_root_cause_proposal(
+    proposal_id: int,
+    proposal: RootCauseProposalUpdate,
+    db: Session = Depends(get_db)
+):
+    db_proposal = db.query(RootCauseProposal).filter(RootCauseProposal.id == proposal_id).first()
+    if db_proposal is None:
+        raise HTTPException(status_code=404, detail="Root cause proposal not found")
+    
+    update_data = proposal.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        old_value = getattr(db_proposal, field, None)
+        if old_value != value and value is not None:
+            setattr(db_proposal, field, value)
+            audit_user_field_change(
+                db=db,
+                entity_type="RootCauseProposal",
+                entity_id=proposal_id,
+                field_changed=field,
+                old_value=str(old_value) if old_value is not None else None,
+                new_value=str(value),
+                changed_by="system"
+            )
+    
+    db.commit()
+    db.refresh(db_proposal)
+    return db_proposal
+
+
+@router.delete("/proposals/{proposal_id}", status_code=status.HTTP_204_NO_CONTENT)
+def reject_root_cause_proposal(proposal_id: int, db: Session = Depends(get_db)):
+    db_proposal = db.query(RootCauseProposal).filter(RootCauseProposal.id == proposal_id).first()
+    if db_proposal is None:
+        raise HTTPException(status_code=404, detail="Root cause proposal not found")
+    
+    # Log rejection to audit_log before setting status to rejected or deleting
+    audit_user_field_change(
+        db=db,
+        entity_type="RootCauseProposal",
+        entity_id=proposal_id,
+        field_changed="status",
+        old_value=db_proposal.status,
+        new_value="rejected",
+        changed_by="system"
+    )
+    
+    db_proposal.status = "rejected"
+    db.commit()
+    return None
     steps = (
         db.query(FiveWhysStep)
         .filter(FiveWhysStep.rca_investigation_id == id)
