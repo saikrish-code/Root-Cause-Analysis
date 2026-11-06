@@ -8,6 +8,7 @@ import { selectCAPA } from '../store/capaSlice'
 import { InvestigationSection } from './InvestigationSection'
 import { RootCauseSection } from './RootCauseSection'
 import { EvidenceChecklistSection } from './EvidenceChecklistSection'
+import { CAPASection } from './CAPASection'
 
 interface CollapsibleSectionProps {
   title: string
@@ -255,47 +256,7 @@ export const RCAForm: React.FC = () => {
       </CollapsibleSection>
 
       <CollapsibleSection title="6. CAPA Recommendations">
-        {capa.actions.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
-            CAPA recommendations will appear after RCA is complete
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {capa.actions.map((action) => (
-              <div
-                key={action.id}
-                className={`p-4 rounded-lg border ${
-                  action.isAIFilled ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      action.action_type === 'Corrective'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {action.action_type}
-                    </span>
-                    {action.isAIFilled && <AIFilledBadge />}
-                  </div>
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                    action.status === 'Proposed' ? 'bg-gray-100 text-gray-800' :
-                    action.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {action.status}
-                  </span>
-                </div>
-                <p className="text-gray-800 font-medium">{action.description}</p>
-                <p className="text-sm text-gray-600 mt-2">{action.rationale}</p>
-                {action.owner && (
-                  <p className="text-xs text-gray-500 mt-2">Owner: {action.owner}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <CAPASection />
       </CollapsibleSection>
     </div>
   )
