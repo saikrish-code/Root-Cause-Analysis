@@ -110,6 +110,25 @@ def update_rca_investigation_partial(
         raise HTTPException(status_code=404, detail="RCA investigation not found")
     
     update_data = investigation.model_dump(exclude_unset=True)
+    
+    if 'confirmed_root_cause' in update_data and update_data['confirmed_root_cause']:
+        db.refresh(db_investigation, ["five_whys_steps", "fishbone_causes"])
+        
+        five_whys_unconfirmed = [
+            step for step in db_investigation.five_whys_steps 
+            if step.is_ai_suggested and not step.user_edited
+        ]
+        fishbone_unconfirmed = [
+            cause for cause in db_investigation.fishbone_causes 
+            if cause.is_ai_suggested and not cause.user_edited
+        ]
+        
+        if five_whys_unconfirmed or fishbone_unconfirmed:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot confirm root cause: unconfirmed AI-suggested items remain. Please confirm or edit all AI suggestions before finalizing."
+            )
+    
     for field, value in update_data.items():
         old_value = getattr(db_investigation, field, None)
         if old_value != value and value is not None:

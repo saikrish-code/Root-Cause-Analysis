@@ -5,6 +5,7 @@ import { selectDeviation, updateField } from '../store/deviationSlice'
 import { selectEvidence } from '../store/evidenceSlice'
 import { selectRCA } from '../store/rcaSlice'
 import { selectCAPA } from '../store/capaSlice'
+import { InvestigationSection } from './InvestigationSection'
 
 interface CollapsibleSectionProps {
   title: string
@@ -287,74 +288,7 @@ export const RCAForm: React.FC = () => {
       </CollapsibleSection>
 
       <CollapsibleSection title="4. Investigation (5 Whys / Fishbone)">
-        {rca.investigation ? (
-          <div>
-            <div className="flex items-center mb-4">
-              <span className="font-medium text-gray-700">Method:</span>
-              <span className="ml-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                {rca.investigation.method === 'five_whys' ? '5 Whys' : 'Fishbone (Ishikawa)'}
-              </span>
-              {rca.investigation.isAIFilled && <AIFilledBadge />}
-            </div>
-            {rca.investigation.five_whys_steps.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-700">5 Whys Steps</h4>
-                {rca.investigation.five_whys_steps.map((step, index) => (
-                  <div
-                    key={step.id}
-                    className={`p-3 rounded-lg border ${
-                      step.isAIFilled ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <span className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
-                        {index + 1}
-                      </span>
-                      {step.is_ai_suggested && <AIFilledBadge />}
-                    </div>
-                    <div className="mt-2">
-                      {step.why_question && (
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Why?</span> {step.why_question}
-                        </p>
-                      )}
-                      <p className="text-gray-800">
-                        <span className="font-medium">→</span> {step.answer}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {rca.investigation.fishbone_causes.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-700">Fishbone Causes</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  {rca.investigation.fishbone_causes.map((cause) => (
-                    <div
-                      key={cause.id}
-                      className={`p-3 rounded-lg border ${
-                        cause.isAIFilled ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center mb-2">
-                        <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-medium">
-                          {cause.category}
-                        </span>
-                        {cause.is_ai_suggested && <AIFilledBadge />}
-                      </div>
-                      <p className="text-sm text-gray-800">{cause.cause_text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">
-            Investigation will be generated after AI processing
-          </p>
-        )}
+        <InvestigationSection />
       </CollapsibleSection>
 
       <CollapsibleSection title="5. Root Cause & Contributing Factors">
