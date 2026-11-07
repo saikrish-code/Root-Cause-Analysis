@@ -14,10 +14,6 @@ The RCA (Root Cause Analysis) system is now ready to run on localhost. Here's ev
 🔗 **http://localhost:8000/docs** (API documentation)
 🔗 **http://localhost:8000/redoc** (API documentation)
 
-## 🔑 **GROQ API Key**
-
-Your GROQ API key: **`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`
-
 ## 🛠️ **Project Structure**
 
 ```
@@ -56,9 +52,6 @@ docker-compose up -d
 ### **Option 2: Manual Setup**
 
 #### **Step 1: Set Environment Variable**
-```bash
-export GROQ_API_KEY="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"
-```
 
 #### **Step 2: Start Backend**
 ```bash
@@ -134,7 +127,6 @@ export PYTHONPATH="backend:$PYTHONPATH"
 ### **GROQ API Key Issues**
 ```bash
 # Verify API key is set
-export GROQ_API_KEY="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"
 ```
 
 ### **Port Conflicts**
