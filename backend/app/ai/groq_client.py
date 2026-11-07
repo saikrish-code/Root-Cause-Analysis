@@ -9,7 +9,11 @@ T = TypeVar("T", bound=BaseModel)
 
 class GroqClient:
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
-        self.api_key = api_key or settings.GROQ_API_KEY
+        self.api_key = api_key or os.getenv("GROQ_API_KEY") or getattr(settings, "GROQ_API_KEY", None)
+        
+        if not self.api_key:
+            raise ValueError("GROQ_API_KEY environment variable is not set. Please set it before running the application.")
+        
         self.primary_model = model or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
         self.fallback_model = "gemma2-9b-it"
         self._client = None
@@ -17,6 +21,8 @@ class GroqClient:
     @property
     def client(self):
         if self._client is None:
+            if not self.api_key:
+                raise RuntimeError("GROQ_API_KEY is not configured. Please set the environment variable GROQ_API_KEY.")
             self._client = Groq(api_key=self.api_key)
         return self._client
 

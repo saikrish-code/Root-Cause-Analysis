@@ -124,10 +124,10 @@ async def ingest_document(
         filename = file.filename or "unknown"
         try:
             text_content = extract_text(file_content, filename)
-        except PDFTooShortError as e:
+        except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
+                detail=f"Couldn't read this PDF ({str(e)}), please paste the text"
             )
     else:
         raise HTTPException(
